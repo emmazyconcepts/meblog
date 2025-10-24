@@ -4,8 +4,6 @@ import { db } from "../../lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { GripVertical, Eye, EyeOff, Settings, Save } from "lucide-react";
 
-// Install required dependency: npm install react-beautiful-dnd
-
 export default function LayoutEditor() {
   const [layout, setLayout] = useState(null);
   const [saving, setSaving] = useState(false);
