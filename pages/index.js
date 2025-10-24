@@ -1,78 +1,256 @@
-import Image from "next/image";
-import { Geist, Geist_Mono } from "next/font/google";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import { useState, useEffect } from "react";
+import Layout from "../components/layout/Layout";
+import PostCard from "../components/ui/PostCard";
+import FeaturedPost from "../components/ui/FeaturedPost";
+import Newsletter from "../components/ui/Newsletter";
+import { db } from "../lib/firebase";
+import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function Home() {
+  const [featuredPosts, setFeaturedPosts] = useState([]);
+  const [recentPosts, setRecentPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      console.log("Fetching posts...");
+
+      // Simple query to get all published posts
+      const postsQuery = query(
+        collection(db, "posts"),
+        where("status", "==", "published")
+      );
+
+      const snapshot = await getDocs(postsQuery);
+      console.log("Total posts found:", snapshot.docs.length);
+
+      const allPosts = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      console.log("All posts:", allPosts);
+
+      // Filter featured posts client-side
+      const featuredData = allPosts
+        .filter((post) => post.featured === true)
+        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+        .slice(0, 3);
+
+      console.log("Featured posts:", featuredData);
+
+      // Get recent posts
+      const recentData = allPosts
+        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt))
+        .slice(0, 6);
+
+      console.log("Recent posts:", recentData);
+
+      setFeaturedPosts(featuredData);
+      setRecentPosts(recentData);
+      setError(null);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Add loading and error states
+  if (loading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading posts...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error: {error}</p>
+            <button
+              onClick={fetchPosts}
+              className="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
-    <div
-      className={`${geistSans.className} ${geistMono.className} flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black`}
-    >
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the index.js file.
+    <Layout>
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-pink-500 via-purple-600 to-blue-600 text-white py-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="font-display font-bold text-4xl md:text-6xl mb-6">
+            Safety First,{" "}
+            <span className="bg-gradient-to-r from-yellow-300 to-pink-300 bg-clip-text text-transparent">
+              Always
+            </span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl md:text-2xl mb-8 text-pink-100 max-w-3xl mx-auto">
+            Empowering sex workers with essential safety resources, educational
+            content, and community support.
           </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => (window.location.href = "#featured-posts")}
+              className="bg-white text-pink-600 px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition-colors duration-200"
+            >
+              Explore Safety Guides
+            </button>
+            <button
+              onClick={() => (window.location.href = "/resources")}
+              className="border-2 border-white text-white px-8 py-3 rounded-full font-semibold hover:bg-white/10 transition-colors duration-200"
+            >
+              Get Help Now
+            </button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs/pages/getting-started?utm_source=create-next-app&utm_medium=default-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      {/* Debug Info - Remove this in production */}
+      {/* <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
+        <div className="flex">
+          <div className="ml-3">
+            <p className="text-sm text-yellow-700">
+              <strong>Debug Info:</strong> Featured: {featuredPosts.length} |
+              Recent: {recentPosts.length} | Total:{" "}
+              {recentPosts.length + featuredPosts.length}
+            </p>
+          </div>
         </div>
-      </main>
-    </div>
+      </div> */}
+
+      {/* Featured Posts */}
+      {featuredPosts.length > 0 ? (
+        <section id="featured-posts" className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="font-display font-bold text-3xl md:text-4xl text-gray-900 mb-4">
+                Featured Safety Guides
+              </h2>
+              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+                Essential reading for maintaining safety and well-being in the
+                industry
+              </p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {featuredPosts.map((post, index) => (
+                <FeaturedPost
+                  key={post.id}
+                  post={post}
+                  featured={index === 0}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="py-16 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-gray-900 mb-4">
+              No Featured Posts Yet
+            </h2>
+            <p className="text-xl text-gray-600 mb-8">
+              Check back soon for featured safety guides and resources.
+            </p>
+            <a
+              href="/admin/posts/new"
+              className="bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 inline-block"
+            >
+              Create First Post
+            </a>
+          </div>
+        </section>
+      )}
+
+      {/* Recent Posts */}
+      {recentPosts.length > 0 ? (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <h2 className="font-display font-bold text-3xl md:text-4xl text-gray-900 mb-4">
+                Latest Updates
+              </h2>
+              <p className="text-xl text-gray-600">
+                Stay informed with our most recent safety resources
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {recentPosts.map((post) => (
+                <PostCard key={post.id} post={post} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : (
+        <section className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="font-display font-bold text-3xl md:text-4xl text-gray-900 mb-4">
+              No Posts Yet
+            </h2>
+            <p className="text-xl text-gray-600">
+              Posts will appear here once they are published.
+            </p>
+          </div>
+        </section>
+      )}
+
+      {/* Newsletter */}
+      <Newsletter />
+
+      {/* Emergency Resources */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="font-display font-bold text-3xl md:text-4xl text-gray-900 mb-6">
+            Need Immediate Help?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+            <div className="bg-red-50 border border-red-200 rounded-xl p-6">
+              <h3 className="font-semibold text-red-800 mb-2">
+                Emergency Contacts
+              </h3>
+              <p className="text-red-600 text-sm">
+                Local support hotlines and emergency services
+              </p>
+            </div>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+              <h3 className="font-semibold text-yellow-800 mb-2">
+                Safety Planning
+              </h3>
+              <p className="text-yellow-600 text-sm">
+                Create your personal safety plan
+              </p>
+            </div>
+            <div className="bg-green-50 border border-green-200 rounded-xl p-6">
+              <h3 className="font-semibold text-green-800 mb-2">
+                Community Support
+              </h3>
+              <p className="text-green-600 text-sm">
+                Connect with trusted organizations
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </Layout>
   );
 }
