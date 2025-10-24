@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
+import { DragDropContext, Droppable, Draggable } from "hello-pangea/dnd";
 import { db } from "../../lib/firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { GripVertical, Eye, EyeOff, Settings, Save } from "lucide-react";
