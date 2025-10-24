@@ -114,7 +114,7 @@ export default function Contact() {
                 </h4>
                 <p className="text-red-700 text-sm">
                   If you in immediate danger, please contact local emergency
-                  services first. For urgent safety support, use our emergency
+                  services first For urgent safety support, use our emergency
                   resources page.
                 </p>
               </div>
