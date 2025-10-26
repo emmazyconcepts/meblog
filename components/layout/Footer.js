@@ -31,7 +31,7 @@ export default function Footer() {
                   href="/blog"
                   className="text-gray-300 hover:text-white transition-colors"
                 >
-                  Safety Guides
+                  Blogs
                 </Link>
               </li>
               <li>

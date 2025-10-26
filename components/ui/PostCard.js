@@ -1,8 +1,54 @@
 import Link from "next/link";
 import { Calendar, Clock, ArrowRight } from "lucide-react";
-import { formatDate } from "../../lib/utils";
+
+// Safe date formatting function (fallback)
+const formatDate = (dateString) => {
+  if (!dateString) return "Recently";
+
+  try {
+    // Handle Firestore timestamps
+    if (dateString && typeof dateString === "object" && dateString.toDate) {
+      const date = dateString.toDate();
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    }
+
+    // Handle string dates
+    const date = new Date(dateString);
+
+    if (isNaN(date.getTime())) {
+      return "Recently";
+    }
+
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch (error) {
+    console.error("Date formatting error:", error);
+    return "Recently";
+  }
+};
 
 export default function PostCard({ post, featured = false }) {
+  if (!post) {
+    return (
+      <div className="bg-white rounded-xl shadow-md overflow-hidden animate-pulse">
+        <div className="h-48 bg-gray-200"></div>
+        <div className="p-6">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-3"></div>
+          <div className="h-6 bg-gray-200 rounded w-3/4 mb-3"></div>
+          <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+        </div>
+      </div>
+    );
+  }
+
   const cardClass = featured
     ? "group bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
     : "group bg-white rounded-xl shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100";
@@ -66,16 +112,16 @@ export default function PostCard({ post, featured = false }) {
 
   return (
     <article className={cardClass}>
-      <Link href={`/blog/${post.slug}`}>
+      <Link href={`/blog/${post.slug || "post"}`}>
         <div className="relative overflow-hidden">
           {post.featuredImage ? (
             <img
               src={post.featuredImage}
-              alt={post.title}
+              alt={post.title || "Post"}
               className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
             />
           ) : (
-            generatePlaceholderImage(post.title)
+            generatePlaceholderImage(post.title || "Untitled Post")
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
@@ -85,7 +131,7 @@ export default function PostCard({ post, featured = false }) {
         <div className="flex items-center space-x-4 text-sm text-gray-500 mb-3">
           <div className="flex items-center space-x-1">
             <Calendar className="h-4 w-4" />
-            <span>{formatDate(post.publishedAt)}</span>
+            <span>{formatDate(post.publishedAt || post.createdAt)}</span>
           </div>
           <div className="flex items-center space-x-1">
             <Clock className="h-4 w-4" />
@@ -93,9 +139,9 @@ export default function PostCard({ post, featured = false }) {
           </div>
         </div>
 
-        <Link href={`/blog/${post.slug}`}>
+        <Link href={`/blog/${post.slug || "post"}`}>
           <h3 className="font-bold text-lg text-gray-900 group-hover:text-pink-600 transition-colors duration-200 mb-3">
-            {post.title}
+            {post.title || "Untitled Post"}
           </h3>
         </Link>
 
@@ -108,7 +154,7 @@ export default function PostCard({ post, featured = false }) {
             {post.author || "Admin"}
           </span>
           <Link
-            href={`/blog/${post.slug}`}
+            href={`/blog/${post.slug || "post"}`}
             className="flex items-center space-x-1 text-pink-600 hover:text-pink-700 font-medium text-sm group"
           >
             <span>Read More</span>

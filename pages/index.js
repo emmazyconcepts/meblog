@@ -145,11 +145,10 @@ export default function Home() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-12">
               <h2 className="font-display font-bold text-3xl md:text-4xl text-gray-900 mb-4">
-                Featured Safety Guides
+                Escort Blog
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Essential reading for maintaining safety and well-being in the
-                industry
+                News, Advice & Safety Information for Clients
               </p>
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -172,12 +171,12 @@ export default function Home() {
             <p className="text-xl text-gray-600 mb-8">
               Check back soon for featured safety guides and resources.
             </p>
-            <a
+            {/* <a
               href="/admin/posts/new"
               className="bg-pink-600 text-white px-6 py-3 rounded-lg hover:bg-pink-700 inline-block"
             >
               Create First Post
-            </a>
+            </a> */}
           </div>
         </section>
       )}

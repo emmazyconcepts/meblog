@@ -127,7 +127,10 @@ export default function Contact() {
                   Send us a Message
                 </h2>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form
+                  onSubmit={handleSubmit}
+                  className="space-y-6 text-black placeholder:bg-black"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label

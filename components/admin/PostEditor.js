@@ -1,15 +1,19 @@
 import { useState, useEffect } from "react";
-import { db, storage } from "../../lib/firebase";
+import { db } from "../../lib/firebase";
 import { collection, addDoc, updateDoc, doc } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { generateSlug, calculateReadTime } from "../../lib/utils";
+import {
+  generateSlug,
+  calculateReadTime,
+  generateExcerpt,
+} from "../../lib/utils";
+import RichTextEditor from "./RichTextEditor";
 
 export default function PostEditor({ post, onSave }) {
   const [formData, setFormData] = useState({
     title: "",
     excerpt: "",
     content: "",
-    featuredImage: "",
+    featuredImage: "", // This will store ImgBB URL
     author: "Admin",
     tags: [],
     status: "draft",
@@ -17,8 +21,8 @@ export default function PostEditor({ post, onSave }) {
     metaDescription: "",
     featured: false,
   });
-  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadingFeatured, setUploadingFeatured] = useState(false);
 
   useEffect(() => {
     if (post) {
@@ -45,25 +49,46 @@ export default function PostEditor({ post, onSave }) {
     }));
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
+  const handleContentChange = (content) => {
+    setFormData((prev) => ({
+      ...prev,
+      content,
+    }));
+  };
+
+  // Upload featured image to ImgBB
+  const handleFeaturedImageUpload = async (event) => {
+    const file = event.target.files[0];
     if (!file) return;
 
-    setUploading(true);
-    try {
-      const storageRef = ref(storage, `posts/${Date.now()}_${file.name}`);
-      const snapshot = await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(snapshot.ref);
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      return;
+    }
 
-      setFormData((prev) => ({
-        ...prev,
-        featuredImage: downloadURL,
-      }));
+    setUploadingFeatured(true);
+
+    try {
+      const { uploadToImgBB, optimizeImage } = await import("../../lib/imgbb");
+
+      const optimizedFile = await optimizeImage(file);
+      const result = await uploadToImgBB(optimizedFile);
+
+      if (result.success) {
+        setFormData((prev) => ({
+          ...prev,
+          featuredImage: result.url,
+        }));
+        alert("Featured image uploaded successfully!");
+      } else {
+        throw new Error(result.error || "Upload failed");
+      }
     } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Error uploading image. Please try again.");
+      console.error("Featured image upload error:", error);
+      alert(`Failed to upload featured image: ${error.message}`);
     } finally {
-      setUploading(false);
+      setUploadingFeatured(false);
+      event.target.value = "";
     }
   };
 
@@ -79,10 +104,11 @@ export default function PostEditor({ post, onSave }) {
     try {
       const postData = {
         ...formData,
-        slug: generateSlug(formData.title), // Always generate slug
+        slug: generateSlug(formData.title),
         readTime: calculateReadTime(formData.content),
         updatedAt: new Date().toISOString(),
-        keywords: generateKeywords(formData.title, formData.excerpt),
+        // All image URLs are already ImgBB URLs from the editor
+        excerpt: formData.excerpt || generateExcerpt(formData.content),
       };
 
       if (post) {
@@ -103,13 +129,6 @@ export default function PostEditor({ post, onSave }) {
     } finally {
       setSaving(false);
     }
-  };
-
-  const generateKeywords = (title, excerpt) => {
-    const text = `${title} ${excerpt}`.toLowerCase();
-    const words = text.split(/\s+/).filter((word) => word.length > 2);
-    const uniqueWords = [...new Set(words)];
-    return uniqueWords.slice(0, 20);
   };
 
   return (
@@ -147,19 +166,15 @@ export default function PostEditor({ post, onSave }) {
             />
           </div>
 
-          {/* Content */}
+          {/* Rich Text Editor */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Content *
             </label>
-            <textarea
-              name="content"
+            <RichTextEditor
               value={formData.content}
-              onChange={handleInputChange}
-              rows={15}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent font-mono"
-              placeholder="Write your post content here..."
-              required
+              onChange={handleContentChange}
+              placeholder="Write your post content here... Use the toolbar for formatting!"
             />
           </div>
         </div>
@@ -201,16 +216,19 @@ export default function PostEditor({ post, onSave }) {
           </div>
 
           {/* Featured Image */}
-          {/* <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-gray-50 rounded-lg p-4">
             <h3 className="font-medium text-gray-900 mb-4">Featured Image</h3>
             <input
               type="file"
               accept="image/*"
-              onChange={handleImageUpload}
-              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
+              onChange={handleFeaturedImageUpload}
+              disabled={uploadingFeatured}
+              className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100 disabled:opacity-50"
             />
-            {uploading && (
-              <p className="text-sm text-gray-500 mt-2">Uploading...</p>
+            {uploadingFeatured && (
+              <p className="text-sm text-gray-500 mt-2">
+                Uploading to ImgBB...
+              </p>
             )}
             {formData.featuredImage && (
               <div className="mt-4">
@@ -219,6 +237,7 @@ export default function PostEditor({ post, onSave }) {
                   alt="Featured"
                   className="w-full h-32 object-cover rounded-lg"
                 />
+                <p className="text-xs text-gray-500 mt-1">Hosted on ImgBB</p>
                 <button
                   type="button"
                   onClick={() =>
@@ -230,39 +249,6 @@ export default function PostEditor({ post, onSave }) {
                 </button>
               </div>
             )}
-          </div> */}
-
-          {/* SEO Settings */}
-          <div className="bg-gray-50 rounded-lg p-4">
-            <h3 className="font-medium text-gray-900 mb-4">SEO Settings</h3>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Meta Title
-              </label>
-              <input
-                type="text"
-                name="metaTitle"
-                value={formData.metaTitle}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="SEO title (optional)"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Meta Description
-              </label>
-              <textarea
-                name="metaDescription"
-                value={formData.metaDescription}
-                onChange={handleInputChange}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="SEO description (optional)"
-              />
-            </div>
           </div>
 
           {/* Submit Button */}

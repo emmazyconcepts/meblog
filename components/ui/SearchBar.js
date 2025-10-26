@@ -1,156 +1,81 @@
-import { useState, useEffect, useRef } from "react";
-import { Search, X } from "lucide-react";
-import { db } from "../../lib/firebase";
-import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
-import Link from "next/link";
+import { useState, useEffect } from "react";
 
-export default function SearchBar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const searchRef = useRef(null);
+export default function SearchBar({ onSearch = () => {} }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isActive, setIsActive] = useState(false);
 
+  // Debounce search to avoid too many requests
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
+    const timer = setTimeout(() => {
+      onSearch(searchTerm);
+    }, 300);
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    return () => clearTimeout(timer);
+  }, [searchTerm, onSearch]);
 
-  useEffect(() => {
-    if (searchQuery.length < 2) {
-      setResults([]);
-      return;
-    }
-
-    const searchPosts = async () => {
-      setLoading(true);
-      try {
-        const postsQuery = query(
-          collection(db, "posts"),
-          where("status", "==", "published"),
-          orderBy("publishedAt", "desc")
-        );
-        
-        const snapshot = await getDocs(postsQuery);
-        const searchResults = snapshot.docs
-          .map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          }))
-          .filter(post => 
-            post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            post.content.toLowerCase().includes(searchQuery.toLowerCase())
-          );
-        
-        setResults(searchResults);
-      } catch (error) {
-        console.error("Error searching posts:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    const delaySearch = setTimeout(searchPosts, 300);
-    return () => clearTimeout(delaySearch);
-  }, [searchQuery]);
+  const clearSearch = () => {
+    setSearchTerm("");
+    onSearch("");
+  };
 
   return (
-    <div className="relative" ref={searchRef}>
-      {/* Search Button */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="p-2 text-gray-600 hover:text-pink-600 transition-colors duration-200"
-      >
-        <Search className="h-5 w-5" />
-      </button>
+    <div className="relative w-full text-amber-50">
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search safety guides..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onFocus={() => setIsActive(true)}
+          onBlur={() => setTimeout(() => setIsActive(false), 200)}
+          className="w-full px-4 py-3 pl-12 pr-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white placeholder-white"
+        />
+        <svg
+          className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          />
+        </svg>
 
-      {/* Search Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center pt-20 px-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl animate-fade-in">
-            {/* Search Input */}
-            <div className="relative p-4 border-b border-gray-200">
-              <div className="flex items-center space-x-3">
-                <Search className="h-5 w-5 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search safety guides, resources..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 outline-none text-lg placeholder-gray-500"
-                  autoFocus
-                />
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors duration-200"
-                >
-                  <X className="h-5 w-5 text-gray-400" />
-                </button>
-              </div>
-            </div>
+        {searchTerm && (
+          <button
+            onClick={clearSearch}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        )}
+      </div>
 
-            {/* Results */}
-            <div className="max-h-96 overflow-y-auto">
-              {loading ? (
-                <div className="p-8 text-center">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-pink-600 mx-auto"></div>
-                  <p className="text-gray-500 mt-2">Searching...</p>
-                </div>
-              ) : results.length > 0 ? (
-                <div className="p-2">
-                  {results.map((post) => (
-                    <Link
-                      key={post.id}
-                      href={`/blog/${post.slug}`}
-                      onClick={() => setIsOpen(false)}
-                    >
-                      <div className="p-3 hover:bg-gray-50 rounded-lg transition-colors duration-200 cursor-pointer">
-                        <h3 className="font-medium text-gray-900 mb-1">{post.title}</h3>
-                        <p className="text-gray-600 text-sm line-clamp-2">{post.excerpt}</p>
-                        <div className="flex items-center space-x-2 mt-2">
-                          <span className="text-xs text-gray-500">
-                            {new Date(post.publishedAt).toLocaleDateString()}
-                          </span>
-                          <span className="text-xs text-gray-500">•</span>
-                          <span className="text-xs text-gray-500">{post.readTime} min read</span>
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : searchQuery.length >= 2 ? (
-                <div className="p-8 text-center">
-                  <p className="text-gray-500">No results found for "{searchQuery}"</p>
-                </div>
-              ) : (
-                <div className="p-8 text-center">
-                  <p className="text-gray-500">Start typing to search...</p>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Links */}
-            <div className="border-t border-gray-200 p-4 bg-gray-50 rounded-b-2xl">
-              <p className="text-sm text-gray-600 mb-2">Quick searches:</p>
-              <div className="flex flex-wrap gap-2">
-                {["safety tips", "client screening", "legal rights", "mental health"].map((term) => (
-                  <button
-                    key={term}
-                    onClick={() => setSearchQuery(term)}
-                    className="text-xs bg-white border border-gray-300 rounded-full px-3 py-1 hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    {term}
-                  </button>
-                ))}
-              </div>
-            </div>
+      {/* Quick search tips */}
+      {isActive && (
+        <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 mt-2 p-4">
+          <p className="text-sm text-gray-600 mb-2">Try searching for:</p>
+          <div className="flex flex-wrap gap-2">
+            {[
+              "safety",
+              "legal",
+              "health",
+              "business",
+              "technology",
+              "rights",
+              "tips",
+            ].map((term) => (
+              <button
+                key={term}
+                onClick={() => setSearchTerm(term)}
+                className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded transition-colors"
+              >
+                {term}
+              </button>
+            ))}
           </div>
         </div>
       )}

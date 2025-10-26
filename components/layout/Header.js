@@ -8,7 +8,7 @@ export default function Header() {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Safety Guides", href: "/blog" },
+    { name: "Blogs", href: "/blog" },
     { name: "Resources", href: "/resources" },
     { name: "About", href: "/about" },
     { name: "Contact", href: "/contact" },
@@ -30,7 +30,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
-            <SearchBar />
+            {/* <SearchBar /> */}
 
             {navItems.map((item) => (
               <Link
@@ -70,9 +70,7 @@ export default function Header() {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
-            <div className="px-4 mb-4">
-              <SearchBar />
-            </div>
+            <div className="px-4 mb-4">{/* <SearchBar /> */}</div>
             <nav className="flex flex-col space-y-4">
               {navItems.map((item) => (
                 <Link
