@@ -9,7 +9,7 @@ export default function Layout({ children, meta = {} }) {
 
   // Default meta with comprehensive SEO
   const defaultMeta = {
-    title: "MeetAnEscort - Safety Resources & Education for Sex Workers",
+    title: "MeetAnEscort - Blog, Safety Resources & Education for Sex Workers",
     description:
       "Essential safety guides, legal rights information, and health resources for sex workers. Stay safe with expert advice, emergency contacts, and community support.",
     keywords:
@@ -74,41 +74,53 @@ export default function Layout({ children, meta = {} }) {
   return (
     <>
       <Head>
-        {/* Basic Meta Tags */}
-        <title>{defaultMeta.title}</title>
-        <meta name="description" content={defaultMeta.description} />
-        <meta name="keywords" content={metaKeywords} />
-        <meta name="author" content={defaultMeta.author} />
+        <title>
+          MeetAnEscort - Blog, Safety Resources & Education for Sex Workers
+        </title>
         <meta
-          name="robots"
-          content={`${defaultMeta.noindex ? "noindex" : "index"}, ${
-            defaultMeta.nofollow ? "nofollow" : "follow"
-          }`}
+          name="title"
+          content="MeetAnEscort - Blog, Safety Resources & Education for Sex Workers"
         />
-        <meta name="googlebot" content="index, follow" />
-        <link rel="canonical" href={defaultMeta.canonical} />
+        <meta
+          name="description"
+          content="Essential safety guides, legal rights information, and health resources for sex workers. Stay safe with expert advice, emergency contacts, and community support."
+        />
 
-        {/* Open Graph */}
-        <meta property="og:title" content={defaultMeta.title} />
-        <meta property="og:description" content={defaultMeta.description} />
-        <meta property="og:image" content={defaultMeta.ogImage} />
-        <meta property="og:url" content={currentUrl} />
-        <meta property="og:type" content={defaultMeta.ogType} />
-        <meta property="og:site_name" content="MeetAnEscort" />
-        <meta property="og:locale" content="en_US" />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content="https://meetanescortblog.vercel.app/"
+        />
+        <meta
+          property="og:title"
+          content="MeetAnEscort - Blog, Safety Resources & Education for Sex Workers"
+        />
+        <meta
+          property="og:description"
+          content="Essential safety guides, legal rights information, and health resources for sex workers. Stay safe with expert advice, emergency contacts, and community support."
+        />
+        <meta
+          property="og:image"
+          content="https://metatags.io/images/meta-tags.png"
+        />
 
-        {/* Twitter Card */}
-        <meta name="twitter:card" content={defaultMeta.twitterCard} />
-        <meta name="twitter:title" content={defaultMeta.title} />
-        <meta name="twitter:description" content={defaultMeta.description} />
-        <meta name="twitter:image" content={defaultMeta.ogImage} />
-        <meta name="twitter:site" content="@meetanescort" />
-        <meta name="twitter:creator" content="@meetanescort" />
-
-        {/* Additional Meta Tags */}
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#8B5CF6" />
-        <meta name="msapplication-TileColor" content="#8B5CF6" />
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta
+          property="twitter:url"
+          content="https://meetanescortblog.vercel.app/"
+        />
+        <meta
+          property="twitter:title"
+          content="MeetAnEscort - Blog, Safety Resources & Education for Sex Workers"
+        />
+        <meta
+          property="twitter:description"
+          content="Essential safety guides, legal rights information, and health resources for sex workers. Stay safe with expert advice, emergency contacts, and community support."
+        />
+        <meta
+          property="twitter:image"
+          content="https://metatags.io/images/meta-tags.png"
+        />
 
         {/* Favicon */}
         <link rel="icon" href="/favicon.ico" />
