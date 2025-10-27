@@ -5,6 +5,7 @@ import Layout from "../../components/layout/Layout";
 import PostCard from "../../components/ui/PostCard";
 import SearchBar from "../../components/ui/SearchBar";
 import { formatDate } from "../../lib/utils";
+import { generateBlogSchema, generateFAQSchema } from "../lib/seoUtils.js";
 
 export default function Blog() {
   const [posts, setPosts] = useState([]);
@@ -24,6 +25,16 @@ export default function Blog() {
     { id: "technology", name: "Technology", count: 0 },
     { id: "community", name: "Community", count: 0 },
   ];
+
+  const blogMeta = {
+    title: "Safety Blog - Essential Guides for Sex Workers | MeetAnEscort",
+    description:
+      "Comprehensive safety blog featuring essential guides, legal rights information, health resources, and safety tips for sex workers and escorts.",
+    keywords:
+      "sex worker safety blog, escort safety articles, safety tips blog, legal rights information, health resources for sex workers",
+    canonical: "https://meetanescort.info/blog",
+    schema: generateBlogSchema(posts), // You'll need to create this function
+  };
 
   useEffect(() => {
     fetchPosts();
@@ -264,6 +275,7 @@ export default function Blog() {
 
   return (
     <Layout
+      meta={blogMeta}
       title="Blog - Meetanescort Safety Resources"
       description="Browse all safety guides, legal resources, and educational content for sex workers. Stay informed and stay safe."
     >

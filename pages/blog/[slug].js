@@ -13,6 +13,10 @@ import Layout from "../../components/layout/Layout";
 import { Calendar, Clock, User, ArrowLeft, Share2 } from "lucide-react";
 import { formatDate, calculateReadTime } from "../../lib/utils";
 import CommentSection from "../../components/comments/CommentSection";
+import {
+  generateArticleSchema,
+  generateBreadcrumbSchema,
+} from "../lib/seoUtils.js";
 
 export default function BlogPost() {
   const router = useRouter();
@@ -134,13 +138,21 @@ export default function BlogPost() {
     );
   }
 
+  const postMeta = {
+    title: `${post.title} | MeetAnEscort Safety Guide`,
+    description: post.excerpt,
+    keywords: post.tags
+      ? post.tags.join(", ")
+      : "sex worker safety, escort safety",
+    publishedTime: post.publishedAt,
+    modifiedTime: post.updatedAt,
+    ogType: "article",
+    canonical: `https://meetanescort.info/blog/${post.slug}`,
+    schema: generateArticleSchema(post), // You'll need to create this function
+  };
+
   return (
-    <Layout
-      meta={{
-        title: post.metaTitle || post.title,
-        description: post.metaDescription || post.excerpt,
-      }}
-    >
+    <Layout meta={postMeta}>
       <article className="min-h-screen bg-white">
         {/* Back Button */}
         <div className="border-b border-gray-200">
