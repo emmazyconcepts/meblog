@@ -5,7 +5,7 @@ import Layout from "../../components/layout/Layout";
 import PostCard from "../../components/ui/PostCard";
 import SearchBar from "../../components/ui/SearchBar";
 import { formatDate } from "../../lib/utils";
-import { generateBlogSchema, generateFAQSchema } from "../lib/seoUtils.js";
+import { generateBlogSchema, generateFAQSchema } from "../../lib/seoUtils";
 
 export default function Blog() {
   const [posts, setPosts] = useState([]);

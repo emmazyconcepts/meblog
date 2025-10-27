@@ -16,7 +16,7 @@ import CommentSection from "../../components/comments/CommentSection";
 import {
   generateArticleSchema,
   generateBreadcrumbSchema,
-} from "../lib/seoUtils.js";
+} from "../../lib/seoUtils";
 
 export default function BlogPost() {
   const router = useRouter();
