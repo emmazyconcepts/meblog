@@ -8,7 +8,10 @@ export default function Document() {
           name="description"
           content="Essential safety guides, legal rights information, and health resources for sex workers."
         />
-        <meta property="og:image" content="/logo.png" />
+        <meta
+          property="og:image"
+          content="https://meetanescortblog.vercel.app/logo.png"
+        />
 
         <link rel="icon" href="/favicon.ico" />
       </Head>{" "}
